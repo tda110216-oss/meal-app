@@ -38,11 +38,11 @@ async function saveData() {
 }
 
 // ボタン
-function toggle(key) {
+window.toggle = function(key) {
     data[key] = !data[key];
     saveData();
     render();
-}
+};
 
 // 初期値
 function get(key, type) {
@@ -146,6 +146,8 @@ datePicker.addEventListener("change", async () => {
     render();
 });
 
-await loadData();
-render();
+(async () => {
+    await loadData();
+    render();
+})();
 </script>
