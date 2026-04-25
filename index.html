@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>meal_minokyoro</title>
+
+<style>
+body {
+    font-family: -apple-system, BlinkMacSystemFont;
+    background: #f5f7fa;
+    margin: 0;
+    padding: 10px;
+}
+.container {
+    max-width: 600px;
+    margin: auto;
+}
+h1 {
+    text-align: center;
+}
+input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+}
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.header {
+    text-align: center;
+}
+.main {
+    display: flex;
+    gap: 10px;
+}
+.section {
+    flex: 1;
+}
+.row {
+    display: flex;
+    gap: 5px;
+}
+.col {
+    flex: 1;
+    text-align: center;
+}
+button {
+    width: 100%;
+    margin: 3px 0;
+    padding: 6px;
+    border: none;
+    border-radius: 6px;
+}
+.on { background: #4caf50; color: white; }
+.off { background: #ddd; }
+</style>
+</head>
+
+<body>
+<div class="container">
+<h1>🍽 meal_minokyoro</h1>
+
+<input type="date" id="datePicker">
+
+<div id="app"></div>
+</div>
+
+<script>
+const app = document.getElementById("app");
+const datePicker = document.getElementById("datePicker");
+
+let holidays = {};
+const data = JSON.parse(localStorage.getItem("mealData") || "{}");
+
+// 初期日付
+const today = new Date();
+datePicker.value = today.toISOString().split("T")[0];
+
+// 祝日取得
+async function fetchHolidays(year) {
+    const res = await fetch(`https://holidays-jp.github.io/api/v1/${year}/date.json`);
+    holidays = await res.json();
+}
+
+// ON/OFF切替
+function toggle(key) {
+    data[key] = !data[key];
+    localStorage.setItem("mealData", JSON.stringify(data));
+    render();
+}
+
+// デフォルト
+function get(key, type) {
+    if (data[key] !== undefined) return data[key];
+    return type === "tw" ? false : true;
+}
+
+// 日曜取得
+function getSunday(date) {
+    const d = new Date(date);
+    d.setDate(d.getDate() - d.getDay());
+    return d;
+}
+
+// 描画
+async function render() {
+    app.innerHTML = "";
+
+    const baseDate = new Date(datePicker.value);
+    await fetchHolidays(baseDate.getFullYear());
+
+    const sunday = getSunday(baseDate);
+
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(sunday);
+        d.setDate(sunday.getDate() + i);
+
+        const dayStr = d.toISOString().split("T")[0];
+        const weekday = d.toLocaleDateString("ja-JP", { weekday: "long" });
+
+        const isHoliday = holidays[dayStr];
+        const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML = `
+        <div class="header">
+            <div>${weekday}</div>
+            <div>${dayStr}</div>
+        </div>
+
+        <div class="main">
+
+            <!-- ご飯 -->
+            <div class="section">
+                <h4>🍽 ご飯</h4>
+                <div class="row">
+                    <div class="col">
+                        <p>M</p>
+                        ${["lunch","dinner"].map(m =>
+                            `<button class="${get(dayStr+"_M_"+m) ? "on":"off"}"
+                            onclick="toggle('${dayStr}_M_${m}')">
+                            ${m=="lunch"?"昼":"夜"}
+                            </button>`).join("")}
+                    </div>
+                    <div class="col">
+                        <p>K</p>
+                        ${["lunch","dinner"].map(m =>
+                            `<button class="${get(dayStr+"_K_"+m) ? "on":"off"}"
+                            onclick="toggle('${dayStr}_K_${m}')">
+                            ${m=="lunch"?"昼":"夜"}
+                            </button>`).join("")}
+                    </div>
+                </div>
+            </div>
+
+            <!-- テレワーク -->
+            <div class="section">
+                <h4>💻 テレワーク</h4>
+                ${(!isWeekend && !isHoliday) ? `
+                <div class="row">
+                    <div class="col">
+                        <p>M</p>
+                        ${["am","pm"].map(t =>
+                            `<button class="${get(dayStr+"_M_tw_"+t,"tw") ? "on":"off"}"
+                            onclick="toggle('${dayStr}_M_tw_${t}')">
+                            ${t=="am"?"午前":"午後"}
+                            </button>`).join("")}
+                    </div>
+                    <div class="col">
+                        <p>K</p>
+                        ${["am","pm"].map(t =>
+                            `<button class="${get(dayStr+"_K_tw_"+t,"tw") ? "on":"off"}"
+                            onclick="toggle('${dayStr}_K_tw_${t}')">
+                            ${t=="am"?"午前":"午後"}
+                            </button>`).join("")}
+                    </div>
+                </div>` : `<p>なし</p>`}
+            </div>
+
+        </div>
+        `;
+        app.appendChild(card);
+    }
+}
+
+// 日付変更
+datePicker.addEventListener("change", render);
+
+render();
+</script>
+</body>
+</html>
