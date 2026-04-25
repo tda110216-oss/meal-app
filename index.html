@@ -2,11 +2,11 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// ★ あなたのFirebase設定に置き換える
+// 🔥 あなたのFirebase設定に置き換える
 const firebaseConfig = {
-  apiKey: "ここを貼る",
-  authDomain: "ここを貼る",
-  projectId: "ここを貼る"
+  apiKey: "AIzaSyD08AwiSk7AqPxh5id_oyfqJJ6m_PylGKc",
+  authDomain: "meal-minokyoro.firebaseapp.com",
+  projectId: "meal-minokyoro"
 };
 
 const appFirebase = initializeApp(firebaseConfig);
@@ -18,13 +18,13 @@ const datePicker = document.getElementById("datePicker");
 let holidays = {};
 let data = {};
 
-// 祝日取得
+// 祝日
 async function fetchHolidays(year) {
     const res = await fetch(`https://holidays-jp.github.io/api/v1/${year}/date.json`);
     holidays = await res.json();
 }
 
-// Firebaseから読み込み
+// Firebaseから取得
 async function loadData() {
     const snap = await getDoc(doc(db, "meal", "shared"));
     if (snap.exists()) {
@@ -32,25 +32,25 @@ async function loadData() {
     }
 }
 
-// Firebaseに保存
+// Firebaseへ保存
 async function saveData() {
     await setDoc(doc(db, "meal", "shared"), data);
 }
 
-// トグル
+// ボタン
 function toggle(key) {
     data[key] = !data[key];
     saveData();
     render();
 }
 
-// デフォルト
+// 初期値
 function get(key, type) {
     if (data[key] !== undefined) return data[key];
     return type === "tw" ? false : true;
 }
 
-// 日曜取得
+// 日曜開始
 function getSunday(date) {
     const d = new Date(date);
     d.setDate(d.getDate() - d.getDay());
@@ -138,7 +138,7 @@ async function render() {
     }
 }
 
-// 初期処理
+// 初期
 datePicker.value = new Date().toISOString().split("T")[0];
 
 datePicker.addEventListener("change", async () => {
