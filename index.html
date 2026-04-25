@@ -1,85 +1,22 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>meal_minokyoro</title>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-<style>
-body {
-    font-family: -apple-system, BlinkMacSystemFont;
-    background: #f5f7fa;
-    margin: 0;
-    padding: 10px;
-}
-.container {
-    max-width: 600px;
-    margin: auto;
-}
-h1 {
-    text-align: center;
-}
-input {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 10px;
-}
-.card {
-    background: white;
-    border-radius: 12px;
-    padding: 12px;
-    margin-bottom: 10px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
-.header {
-    text-align: center;
-}
-.main {
-    display: flex;
-    gap: 10px;
-}
-.section {
-    flex: 1;
-}
-.row {
-    display: flex;
-    gap: 5px;
-}
-.col {
-    flex: 1;
-    text-align: center;
-}
-button {
-    width: 100%;
-    margin: 3px 0;
-    padding: 6px;
-    border: none;
-    border-radius: 6px;
-}
-.on { background: #4caf50; color: white; }
-.off { background: #ddd; }
-</style>
-</head>
+// ★ あなたのFirebase設定に置き換える
+const firebaseConfig = {
+  apiKey: "ここを貼る",
+  authDomain: "ここを貼る",
+  projectId: "ここを貼る"
+};
 
-<body>
-<div class="container">
-<h1>🍽 meal_minokyoro</h1>
+const appFirebase = initializeApp(firebaseConfig);
+const db = getFirestore(appFirebase);
 
-<input type="date" id="datePicker">
-
-<div id="app"></div>
-</div>
-
-<script>
 const app = document.getElementById("app");
 const datePicker = document.getElementById("datePicker");
 
 let holidays = {};
-const data = JSON.parse(localStorage.getItem("mealData") || "{}");
-
-// 初期日付
-const today = new Date();
-datePicker.value = today.toISOString().split("T")[0];
+let data = {};
 
 // 祝日取得
 async function fetchHolidays(year) {
@@ -87,16 +24,24 @@ async function fetchHolidays(year) {
     holidays = await res.json();
 }
 
-// ON/OFF切替
+// Firebaseから読み込み
+async function loadData() {
+    const snap = await getDoc(doc(db, "meal", "shared"));
+    if (snap.exists()) {
+        data = snap.data();
+    }
+}
+
+// Firebaseに保存
+async function saveData() {
+    await setDoc(doc(db, "meal", "shared"), data);
+}
+
+// トグル
 function toggle(key) {
-    const current = data[key] === undefined ? null : data[key];
-
-    // 初回でも確実に切り替える
-    data[key] = current === null ? false : !current;
-
-    localStorage.setItem("mealData", JSON.stringify(data));
-
-    setTimeout(render, 0); // ← これが重要
+    data[key] = !data[key];
+    saveData();
+    render();
 }
 
 // デフォルト
@@ -142,7 +87,6 @@ async function render() {
 
         <div class="main">
 
-            <!-- ご飯 -->
             <div class="section">
                 <h4>🍽 ご飯</h4>
                 <div class="row">
@@ -165,7 +109,6 @@ async function render() {
                 </div>
             </div>
 
-            <!-- テレワーク -->
             <div class="section">
                 <h4>💻 テレワーク</h4>
                 ${(!isWeekend && !isHoliday) ? `
@@ -195,10 +138,14 @@ async function render() {
     }
 }
 
-// 日付変更
-datePicker.addEventListener("change", render);
+// 初期処理
+datePicker.value = new Date().toISOString().split("T")[0];
 
+datePicker.addEventListener("change", async () => {
+    await loadData();
+    render();
+});
+
+await loadData();
 render();
 </script>
-</body>
-</html>
