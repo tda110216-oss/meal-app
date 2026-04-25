@@ -89,9 +89,14 @@ async function fetchHolidays(year) {
 
 // ON/OFF切替
 function toggle(key) {
-    data[key] = !data[key];
+    const current = data[key] === undefined ? null : data[key];
+
+    // 初回でも確実に切り替える
+    data[key] = current === null ? false : !current;
+
     localStorage.setItem("mealData", JSON.stringify(data));
-    render();
+
+    setTimeout(render, 0); // ← これが重要
 }
 
 // デフォルト
