@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 from datetime import datetime, timedelta
+import os
+from flask import Flask
 
 app = Flask(__name__)
 
@@ -32,4 +34,5 @@ def index():
     return render_template("index.html", week=week, meal_data=meal_data, selected_date=selected_date.strftime("%Y-%m-%d"))
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
