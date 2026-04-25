@@ -1,16 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>meal_minokyoro</title>
+
+<style>
+body {
+    font-family: -apple-system, BlinkMacSystemFont;
+    background: #f5f5f5;
+    margin: 0;
+    padding: 10px;
+}
+
+h1 {
+    text-align: center;
+}
+
+#datePicker {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+}
+
+.row {
+    display: flex;
+    justify-content: space-between;
+}
+
+.col {
+    width: 48%;
+    text-align: center;
+}
+
+button {
+    width: 48%;
+    margin: 2px;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+}
+
+.on {
+    background: #4CAF50;
+    color: white;
+}
+
+.off {
+    background: #ddd;
+}
+</style>
+</head>
+
+<body>
+
+<h1>meal_minokyoro</h1>
+<input type="date" id="datePicker">
+<div id="app"></div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// 🔥 あなたのFirebase設定に置き換える
+// 🔥 あなたの値に置き換える
 const firebaseConfig = {
-  apiKey: "AIzaSyD08AwiSk7AqPxh5id_oyfqJJ6m_PylGKc",
-  authDomain: "meal-minokyoro.firebaseapp.com",
-  projectId: "meal-minokyoro"
+  apiKey: "ここ",
+  authDomain: "ここ",
+  projectId: "ここ"
 };
 
 const appFirebase = initializeApp(firebaseConfig);
 const db = getFirestore(appFirebase);
+
+document.addEventListener("DOMContentLoaded", async () => {
 
 const app = document.getElementById("app");
 const datePicker = document.getElementById("datePicker");
@@ -24,20 +99,26 @@ async function fetchHolidays(year) {
     holidays = await res.json();
 }
 
-// Firebaseから取得
+// 読み込み
 async function loadData() {
-    const snap = await getDoc(doc(db, "meal", "shared"));
-    if (snap.exists()) {
-        data = snap.data();
+    try {
+        const snap = await getDoc(doc(db, "meal", "shared"));
+        if (snap.exists()) data = snap.data();
+    } catch(e) {
+        console.log(e);
     }
 }
 
-// Firebaseへ保存
+// 保存
 async function saveData() {
-    await setDoc(doc(db, "meal", "shared"), data);
+    try {
+        await setDoc(doc(db, "meal", "shared"), data);
+    } catch(e) {
+        console.log(e);
+    }
 }
 
-// ボタン
+// グローバル化
 window.toggle = function(key) {
     data[key] = !data[key];
     saveData();
@@ -50,7 +131,7 @@ function get(key, type) {
     return type === "tw" ? false : true;
 }
 
-// 日曜開始
+// 日曜
 function getSunday(date) {
     const d = new Date(date);
     d.setDate(d.getDate() - d.getDay());
@@ -85,53 +166,46 @@ async function render() {
             <div>${dayStr}</div>
         </div>
 
-        <div class="main">
-
-            <div class="section">
-                <h4>🍽 ご飯</h4>
-                <div class="row">
-                    <div class="col">
-                        <p>M</p>
-                        ${["lunch","dinner"].map(m =>
-                            `<button class="${get(dayStr+"_M_"+m) ? "on":"off"}"
-                            onclick="toggle('${dayStr}_M_${m}')">
-                            ${m=="lunch"?"昼":"夜"}
-                            </button>`).join("")}
-                    </div>
-                    <div class="col">
-                        <p>K</p>
-                        ${["lunch","dinner"].map(m =>
-                            `<button class="${get(dayStr+"_K_"+m) ? "on":"off"}"
-                            onclick="toggle('${dayStr}_K_${m}')">
-                            ${m=="lunch"?"昼":"夜"}
-                            </button>`).join("")}
-                    </div>
-                </div>
+        <div class="row">
+            <div class="col">
+                <p>🍽 M</p>
+                ${["lunch","dinner"].map(m =>
+                    `<button class="${get(dayStr+"_M_"+m) ? "on":"off"}"
+                    onclick="toggle('${dayStr}_M_${m}')">
+                    ${m=="lunch"?"昼":"夜"}
+                    </button>`).join("")}
             </div>
 
-            <div class="section">
-                <h4>💻 テレワーク</h4>
-                ${(!isWeekend && !isHoliday) ? `
-                <div class="row">
-                    <div class="col">
-                        <p>M</p>
-                        ${["am","pm"].map(t =>
-                            `<button class="${get(dayStr+"_M_tw_"+t,"tw") ? "on":"off"}"
-                            onclick="toggle('${dayStr}_M_tw_${t}')">
-                            ${t=="am"?"午前":"午後"}
-                            </button>`).join("")}
-                    </div>
-                    <div class="col">
-                        <p>K</p>
-                        ${["am","pm"].map(t =>
-                            `<button class="${get(dayStr+"_K_tw_"+t,"tw") ? "on":"off"}"
-                            onclick="toggle('${dayStr}_K_tw_${t}')">
-                            ${t=="am"?"午前":"午後"}
-                            </button>`).join("")}
-                    </div>
-                </div>` : `<p>なし</p>`}
+            <div class="col">
+                <p>🍽 K</p>
+                ${["lunch","dinner"].map(m =>
+                    `<button class="${get(dayStr+"_K_"+m) ? "on":"off"}"
+                    onclick="toggle('${dayStr}_K_${m}')">
+                    ${m=="lunch"?"昼":"夜"}
+                    </button>`).join("")}
+            </div>
+        </div>
+
+        <div class="row">
+            ${(!isWeekend && !isHoliday) ? `
+            <div class="col">
+                <p>💻 M</p>
+                ${["am","pm"].map(t =>
+                    `<button class="${get(dayStr+"_M_tw_"+t,"tw") ? "on":"off"}"
+                    onclick="toggle('${dayStr}_M_tw_${t}')">
+                    ${t=="am"?"午前":"午後"}
+                    </button>`).join("")}
             </div>
 
+            <div class="col">
+                <p>💻 K</p>
+                ${["am","pm"].map(t =>
+                    `<button class="${get(dayStr+"_K_tw_"+t,"tw") ? "on":"off"}"
+                    onclick="toggle('${dayStr}_K_tw_${t}')">
+                    ${t=="am"?"午前":"午後"}
+                    </button>`).join("")}
+            </div>
+            ` : `<p>休日</p>`}
         </div>
         `;
         app.appendChild(card);
@@ -146,8 +220,11 @@ datePicker.addEventListener("change", async () => {
     render();
 });
 
-(async () => {
-    await loadData();
-    render();
-})();
+await loadData();
+render();
+
+});
 </script>
+
+</body>
+</html>
