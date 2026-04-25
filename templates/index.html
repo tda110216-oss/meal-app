@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>meal_minokyoro</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#4caf50">
+    <link rel="apple-touch-icon" href="/static/icon.png">
+</head>
+<body>
+
+<div class="container">
+    <h1>🍽 meal_minokyoro</h1>
+
+    <form method="get">
+        <input type="date" name="date" value="{{ selected_date }}">
+        <button type="submit">表示</button>
+    </form>
+
+    <div class="grid">
+        {% for day in week %}
+        <div class="card">
+
+            <div class="header">
+                <div class="weekday">{{ day.strftime("%A") }}</div>
+                <div class="date">{{ day.strftime("%m/%d") }}</div>
+            </div>
+
+            <div class="main">
+
+                <!-- ご飯 -->
+                <div class="section">
+                    <h3>🍽 ご飯</h3>
+                    <div class="row">
+
+                        <!-- M -->
+                        <div class="col">
+                            <p>M</p>
+                            {% for meal in ["lunch", "dinner"] %}
+                                {% set key = day.strftime("%Y-%m-%d") + "_M_" + meal %}
+                                <form method="post">
+                                    <input type="hidden" name="key" value="{{ key }}">
+                                    <button class="meal {{ 'off' if meal_data.get(key) == False else 'on' }}">
+                                        {{ "昼" if meal == "lunch" else "夜" }}
+                                    </button>
+                                </form>
+                            {% endfor %}
+                        </div>
+
+                        <!-- K -->
+                        <div class="col">
+                            <p>K</p>
+                            {% for meal in ["lunch", "dinner"] %}
+                                {% set key = day.strftime("%Y-%m-%d") + "_K_" + meal %}
+                                <form method="post">
+                                    <input type="hidden" name="key" value="{{ key }}">
+                                    <button class="meal {{ 'off' if meal_data.get(key) == False else 'on' }}">
+                                        {{ "昼" if meal == "lunch" else "夜" }}
+                                    </button>
+                                </form>
+                            {% endfor %}
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- テレワーク -->
+                <div class="section">
+                    <h3>💻 テレワーク</h3>
+
+                    {% if day.weekday() < 5 %}
+                    <div class="row">
+
+                        <!-- M -->
+                        <div class="col">
+                            <p>M</p>
+                            {% for tw in ["am", "pm"] %}
+                                {% set key = day.strftime("%Y-%m-%d") + "_M_tw_" + tw %}
+                                <form method="post">
+                                    <input type="hidden" name="key" value="{{ key }}">
+                                    <button class="meal {{ 'off' if meal_data.get(key) == False else 'on' }}">
+                                        {{ "午前" if tw == "am" else "午後" }}
+                                    </button>
+                                </form>
+                            {% endfor %}
+                        </div>
+
+                        <!-- K -->
+                        <div class="col">
+                            <p>K</p>
+                            {% for tw in ["am", "pm"] %}
+                                {% set key = day.strftime("%Y-%m-%d") + "_K_tw_" + tw %}
+                                <form method="post">
+                                    <input type="hidden" name="key" value="{{ key }}">
+                                    <button class="meal {{ 'off' if meal_data.get(key) == False else 'on' }}">
+                                        {{ "午前" if tw == "am" else "午後" }}
+                                    </button>
+                                </form>
+                            {% endfor %}
+                        </div>
+
+                    </div>
+                    {% else %}
+                        <p class="weekend">※土日はなし</p>
+                    {% endif %}
+                </div>
+
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+</body>
+</html>
